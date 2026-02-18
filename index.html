@@ -3,127 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dev Portfolio | Space Visualizer</title>
+    <title>Dev Portfolio | Gang Dong-won</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* --- Base & Scrollbar --- */
+        /* 기본 스타일 및 배경 설정 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
-
+        
         body {
             font-family: 'Pretendard', -apple-system, sans-serif;
-            background: #000;
-            color: #fff;
-            overflow-x: hidden;
+            background: #050505;
+            color: #ffffff;
+            overflow-y: auto;
             line-height: 1.6;
+            min-height: 100vh;
         }
 
-        /* --- Shader Canvas (Background) --- */
+        /* 배경 셰이더 */
         #canvas {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             z-index: -1;
-            filter: brightness(0.5);
+            filter: brightness(0.4);
+            pointer-events: none;
         }
 
-        /* --- Main Layout --- */
+        /* 메인 컨테이너 */
         .container {
+            position: relative;
+            z-index: 10;
             max-width: 800px;
             margin: 0 auto;
-            padding: 60px 20px;
+            padding: 80px 20px;
         }
 
-        /* --- Glassmorphism Card Style --- */
+        /* 유리 질감 카드 섹션 */
         section {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 32px;
             padding: 50px 40px;
             margin-bottom: 40px;
-            transition: all 0.3s ease;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease;
         }
 
         section:hover {
+            transform: translateY(-5px);
             border-color: rgba(59, 130, 246, 0.5);
-            background: rgba(255, 255, 255, 0.05);
         }
 
-        h2 {
-            font-size: 1.4rem;
-            margin-bottom: 35px;
-            color: #3b82f6;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            font-weight: 700;
-        }
-
-        /* --- Profile Section --- */
+        /* 프로필 섹션 특화 스타일 */
         .profile { text-align: center; }
-        
-        /* 프로필 사진 스타일 */
         .profile-img-container {
-            width: 150px;
-            height: 150px;
-            margin: 0 auto 25px;
-            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 30px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+            background: #222; /* 이미지가 로드되기 전 배경색 */
         }
-        
         .profile-img {
             width: 100%;
             height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            object-fit: cover; /* 사진이 찌그러지지 않게 채움 */
+            display: block;
         }
 
-        .profile h1 { font-size: 2.8rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -1px; }
-        .profile p { font-size: 1.1rem; color: #999; margin-bottom: 25px; }
+        .profile h1 { font-size: 2.8rem; margin-bottom: 10px; letter-spacing: -1px; }
+        .profile p { color: #3b82f6; font-weight: 700; font-size: 1.2rem; margin-bottom: 25px; }
+
+        /* 프로젝트 및 이력 스타일 */
+        h2 { font-size: 1.5rem; margin-bottom: 25px; color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; }
+        .item { margin-bottom: 30px; border-left: 2px solid rgba(59, 130, 246, 0.3); padding-left: 20px; }
+        .item-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+        .item-title { font-size: 1.3rem; font-weight: bold; color: #fff; }
+        .item-date { font-size: 0.9rem; color: #666; }
+        .tags { display: flex; gap: 8px; margin-top: 12px; }
+        .tag { background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+
+        /* 소셜 링크 및 버튼 */
         .social-links { display: flex; justify-content: center; gap: 20px; }
-        .social-links a { 
-            width: 45px; height: 45px; 
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.05);
-            border-radius: 50%; color: #fff; text-decoration: none; 
-            transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
-        }
-        .social-links a:hover { background: #3b82f6; transform: translateY(-5px); border-color: #3b82f6; }
+        .social-links a { color: white; opacity: 0.6; transition: 0.3s; }
+        .social-links a:hover { opacity: 1; transform: scale(1.2); color: #3b82f6; }
 
-        /* --- Content Items --- */
-        .item { margin-bottom: 35px; border-left: 2px solid rgba(59, 130, 246, 0.3); padding-left: 20px; }
-        .item-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; }
-        .item-title { font-size: 1.25rem; font-weight: 700; color: #fff; }
-        .item-date { font-size: 0.85rem; color: #555; font-weight: 500; }
-        .item-desc { color: #aaa; margin-top: 10px; font-size: 0.95rem; }
-        .tags { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .tag { background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-
-        /* --- Contact Form --- */
         .contact-form { display: grid; gap: 15px; }
         input, textarea {
             background: rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
-            padding: 16px;
-            border-radius: 16px;
-            color: #fff;
-            font-size: 1rem;
-            transition: 0.3s;
+            padding: 16px; border-radius: 16px; color: white; outline: none;
         }
-        input:focus, textarea:focus { border-color: #3b82f6; background: rgba(0,0,0,0.6); }
+        input:focus, textarea:focus { border-color: #3b82f6; }
         button {
-            background: #3b82f6; color: white; padding: 18px; border: none; border-radius: 16px;
-            cursor: pointer; font-weight: 700; font-size: 1rem; transition: 0.3s; margin-top: 10px;
+            background: #3b82f6; color: white; padding: 16px; border: none; border-radius: 16px;
+            cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.3s;
         }
         button:hover { background: #2563eb; transform: scale(1.02); }
 
         @media (max-width: 600px) {
-            .profile h1 { font-size: 2rem; }
-            section { padding: 30px 20px; }
+            .container { padding: 40px 15px; }
+            .profile h1 { font-size: 2.2rem; }
+            .item-header { flex-direction: column; }
         }
     </style>
 </head>
@@ -134,59 +120,38 @@
     <div class="container">
         <section class="profile">
             <div class="profile-img-container">
-                <img src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-img">
+                <img src="images/강동원.jpg" alt="강동원 프로필" class="profile-img">
             </div>
-            <h1>HONG GIL DONG</h1>
+            <h1>강동원</h1>
             <p>Creative Developer & UI Engineer</p>
             <div class="social-links">
                 <a href="#"><i data-lucide="github"></i></a>
-                <a href="#"><i data-lucide="linkedin"></i></a>
                 <a href="#"><i data-lucide="mail"></i></a>
+                <a href="#"><i data-lucide="instagram"></i></a>
             </div>
         </section>
 
         <section id="projects">
-            <h2>Featured Projects</h2>
+            <h2>Experience & Projects</h2>
             <div class="item">
                 <div class="item-header">
-                    <span class="item-title">Boxed Space Anomaly</span>
-                    <span class="item-date">2024.02</span>
+                    <span class="item-title">Space Visualizer Portfolio</span>
+                    <span class="item-date">2024.02 - Present</span>
                 </div>
-                <p class="item-desc">WebGL과 Fragment Shader를 이용한 인터랙티브 3D 비주얼라이저 개발.</p>
+                <p style="color:#aaa;">WebGL과 고급 셰이더 기법을 활용하여 시각적으로 압도적인 사용자 경험을 설계하고 구현했습니다.</p>
                 <div class="tags">
-                    <span class="tag">WebGL</span><span class="tag">GLSL</span><span class="tag">Creative Coding</span>
+                    <span class="tag">WebGL2</span><span class="tag">GLSL</span><span class="tag">Next.js</span>
                 </div>
-            </div>
-            <div class="item">
-                <div class="item-header">
-                    <span class="item-title">Next-gen E-commerce UI</span>
-                    <span class="item-date">2023.12</span>
-                </div>
-                <p class="item-desc">초당 1000건의 요청을 처리하는 고성능 커머스 프론트엔드 구축.</p>
-                <div class="tags">
-                    <span class="tag">Next.js</span><span class="tag">TypeScript</span>
-                </div>
-            </div>
-        </section>
-
-        <section id="experience">
-            <h2>Experience</h2>
-            <div class="item">
-                <div class="item-header">
-                    <span class="item-title">Tech Innovation Lab</span>
-                    <span class="item-date">2022 - Present</span>
-                </div>
-                <p class="item-desc">Senior Frontend Developer / UI Lead</p>
             </div>
         </section>
 
         <section id="contact">
             <h2>Get In Touch</h2>
-            <form class="contact-form" onsubmit="event.preventDefault(); alert('메시지가 전송되었습니다!');">
-                <input type="text" placeholder="Name" required>
-                <input type="email" placeholder="Email" required>
-                <textarea rows="4" placeholder="Message" required></textarea>
-                <button type="submit">SEND MESSAGE</button>
+            <form class="contact-form" onsubmit="event.preventDefault(); alert('전송되었습니다!');">
+                <input type="text" placeholder="성함" required>
+                <input type="email" placeholder="이메일 주소" required>
+                <textarea rows="4" placeholder="메시지를 입력하세요"></textarea>
+                <button type="submit">메시지 보내기</button>
             </form>
         </section>
     </div>
@@ -196,83 +161,55 @@
     out vec4 O;
     uniform float time;
     uniform vec2 resolution;
-    #define R resolution
-    #define T time
-    #define rot(a) mat2(cos((a)-vec4(0,11,33,0)))
-    
-    float tor(vec3 p, vec2 s) {
-        vec2 c=vec2(length(p.xy)-s.x,p.z);
-        return length(c)-s.y;
-    }
-    vec2 map(vec3 p) {
-        vec3 q=p;
-        p.yz*=rot(-T*.15);
-        p.xz*=rot(T*.1);
-        vec2 a=vec2(abs(tor(p,vec2(1.2,.5)))-.01,1),
-             b=vec2(abs(length(q)-12.)-.05,0);
-        return a.x<b.x?a:b;
-    }
     void main() {
-        vec2 uv=(gl_FragCoord.xy-.5*R)/min(R.x,R.y);
-        vec3 col=vec3(0), p=vec3(0,0,-4.), rd=normalize(vec3(uv,1.2));
-        float dd=.0, at=.0;
-        for (float i=.0; i<80.; i++) {
-            vec2 d=map(p);
-            if (abs(d.x)<1e-3) break;
-            p+=rd*d.x;
-            dd+=d.x;
-            at+=.015*(.015/dd);
+        vec2 uv = (gl_FragCoord.xy - 0.5 * resolution.xy) / min(resolution.y, resolution.x);
+        float t = time * 0.2;
+        vec3 col = vec3(0);
+        for(float i=0.0; i<3.0; i++) {
+            uv = abs(uv) - 0.5;
+            uv *= mat2(cos(t), sin(t), -sin(t), cos(t));
+            col += 0.01 / abs(length(uv) - 0.3) * vec3(0.2, 0.5, 1.0);
         }
-        col+=at*vec3(0.3, 0.6, 1.0);
-        O=vec4(col,1);
+        O = vec4(col, 1.0);
     }</script>
 
     <script>
-        // Shader Engine Logic
-        let dpr = window.devicePixelRatio;
-        class Renderer {
-            constructor(canvas) {
-                this.canvas = canvas;
-                this.gl = canvas.getContext("webgl2");
-                this.vsSrc = "#version 300 es\nin vec4 position; void main(){gl_Position=position;}";
-            }
-            setup() {
-                const gl = this.gl;
-                const vs = gl.createShader(gl.VERTEX_SHADER);
-                gl.shaderSource(vs, this.vsSrc); gl.compileShader(vs);
-                const fs = gl.createShader(gl.FRAGMENT_SHADER);
-                gl.shaderSource(fs, document.getElementById("fragmentShader").textContent); gl.compileShader(fs);
-                this.prog = gl.createProgram();
-                gl.attachShader(this.prog, vs); gl.attachShader(this.prog, fs); gl.linkProgram(this.prog);
-                this.buf = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,1,-1,-1,1,1,1,-1]), gl.STATIC_DRAW);
-            }
-            render(now) {
-                const gl = this.gl;
-                gl.useProgram(this.prog);
-                gl.uniform2f(gl.getUniformLocation(this.prog, "resolution"), this.canvas.width, this.canvas.height);
-                gl.uniform1f(gl.getUniformLocation(this.prog, "time"), now * 0.001);
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
-                const pos = gl.getAttribLocation(this.prog, "position");
+        window.onload = () => {
+            const canvas = document.getElementById("canvas");
+            const gl = canvas.getContext("webgl2");
+            if (!gl) return;
+
+            const vsSrc = `#version 300 es
+                in vec4 position;
+                void main() { gl_Position = position; }`;
+            const fsSrc = document.getElementById("fragmentShader").textContent;
+
+            const vs = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vs, vsSrc); gl.compileShader(vs);
+            const fs = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fs, fsSrc); gl.compileShader(fs);
+
+            const prog = gl.createProgram();
+            gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,1,-1,-1,1,1,1,-1]), gl.STATIC_DRAW);
+
+            function render(now) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+                gl.useProgram(prog);
+                gl.uniform2f(gl.getUniformLocation(prog, "resolution"), canvas.width, canvas.height);
+                gl.uniform1f(gl.getUniformLocation(prog, "time"), now * 0.001);
+                const pos = gl.getAttribLocation(prog, "position");
                 gl.enableVertexAttribArray(pos);
                 gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                requestAnimationFrame(render);
             }
-        }
-
-        window.onload = () => {
-            const canvas = document.getElementById("canvas");
-            const renderer = new Renderer(canvas);
-            renderer.setup();
-            const resize = () => {
-                canvas.width = window.innerWidth * dpr;
-                canvas.height = window.innerHeight * dpr;
-                renderer.gl.viewport(0, 0, canvas.width, canvas.height);
-            };
-            window.onresize = resize; resize();
-            const loop = (now) => { renderer.render(now); requestAnimationFrame(loop); };
-            loop(0);
+            requestAnimationFrame(render);
             lucide.createIcons();
         };
     </script>
