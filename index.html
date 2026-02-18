@@ -3,496 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dev Portfolio | Boxed Space Anomaly</title>
+    <title>Dev Portfolio | Space Visualizer</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* CSS 시작 */
-        ::-webkit-scrollbar {
-            width: 0.625rem;
-            height: 0.625rem;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #111;
-            border-radius: 0.3125rem;
-            box-shadow: inset 0.125rem 0.125rem 0.125rem rgba(255, 255, 255, 0.25),
-                        inset -0.125rem -0.125rem 0.125rem rgba(0, 0, 0, 0.25);
-            cursor: default;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #333;
-        }
-
-        ::selection {
-            background: #fff;
-            color: #333;
-        }
-
-        html, body {
-            height: 100vh;
-            height: 100dvh;
-            margin: 0;
-            overflow: hidden;
-        }
+        /* --- Base & Scrollbar --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
 
         body {
-            display: grid;
-            grid-template-rows: calc(100dvh - 4rem) 4rem;
-            font-family: system-ui, sans-serif;
-            background: black;
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        canvas, .editor, #controls {
-            grid-row: 1;
-            grid-column: 1;
-        }
-
-        canvas {
-            --canvas-z-index: -1;
-            width: 100%;
-            height: auto;
-            object-fit: contain;
-            background: black;
-            touch-action: none;
-            z-index: var(--canvas-z-index);
-        }
-
-        .editor, .overlay, #error {
-            font-family: 'Courier New', Courier, monospace;
-            background: repeating-linear-gradient(0deg, #000a, #1119, #000a .25rem);
-            padding: 1em;
-        }
-
-        .editor {
-            color: #fefefe;
-            tab-size: 2;
-            border: none;
-            resize: none;
-        }
-
-        .editor:focus {
-            outline: none;
-        }
-
-        #error {
-            grid-row: 2;
-            grid-column: 1;
-            margin: 0;
-            padding-block: 0;
-            padding-top: .5em;
-            color: firebrick;
-            overflow: auto;
-            text-wrap: pretty;
-        }
-
-        #indicator {
-            visibility: hidden;
-            position: absolute;
-            top: calc(var(--top, 0px) - var(--scroll-top, 0px));
-            width: 0;
-            height: 0;
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-            border-left: 10px solid firebrick;
-            transform: translateY(-25%);
-        }
-
-        .overlay {
-            position: absolute;
+        /* --- Shader Canvas (Background) --- */
+        #canvas {
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            margin: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            filter: brightness(0.6); /* 이력서 가독성을 위해 밝기 조절 */
         }
 
-        .editor, .overlay {
-            font-size: 1rem;
-            line-height: 1.2;
-            white-space: pre;
+        /* --- Main Layout --- */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 80px 20px;
         }
 
-        #controls {
-            position: fixed;
-            top: 1em;
-            right: 2em;
-            z-index: 100;
+        /* --- Glassmorphism Card Style --- */
+        section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            transition: transform 0.3s ease;
         }
 
-        .controls {
-            position: relative;
-            display: flex;
-            gap: 1.5em;
-            padding: .5em 1.25em;
-            background: #1111;
-            border-radius: 4px;
+        section:hover {
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
-        .controls:hover {
-            background: #111f;
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: #3b82f6;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        input {
-            all: unset;
-            opacity: .2;
-            filter: saturate(0) invert(1);
-            cursor: pointer;
-            transition: opacity 200ms ease-in-out;
-            padding: .25em .5em;
-        }
+        /* --- Profile --- */
+        .profile { text-align: center; }
+        .profile h1 { font-size: 3rem; margin-bottom: 10px; font-weight: 800; }
+        .profile p { font-size: 1.2rem; color: #aaa; }
+        .social-links { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .social-links a { color: #fff; text-decoration: none; opacity: 0.7; transition: 0.3s; }
+        .social-links a:hover { opacity: 1; transform: translateY(-3px); }
 
-        input:hover { opacity: 1; }
-
-        .icon { text-align: center; line-height: 1; font-size: 1.2rem; }
-
-        #btnToggleView::after { content: '👁'; }
-        #btnToggleView:checked::after { content: '✏️'; }
-        #btnToggleResolution::after { content: '1️⃣'; }
-        #btnToggleResolution:checked::after { content: '2️⃣'; }
-        #btnReset::after { content: '⏮️'; }
-
-        .hidden { display: none !important; }
-        .opaque { opacity: 1 !important; background: #111 !important; }
-    </style>
-</head>
-<body>
-
-    <canvas id="canvas"></canvas>
-    
-    <textarea id="codeEditor" class="editor" spellcheck="false" autocorrect="off" autocapitalize="off" translate="no" oninput="render()">
-/**
- * [RESUME] 홍길동
- * -----------------------------------------
- * Role: Full-stack Developer
- * Tech: React, TypeScript, WebGL, Node.js
- * * [PROJECTS]
- * 1. Space Visualizer (This Page)
- * 2. High Performance Trading System
- * * [CONTACT]
- * Email: dev@example.com
- * Github: https://github.com/your-id
- */
-    </textarea>
-
-    <pre id="error"></pre>
-    <div id="indicator"></div>
-    <div id="controls">
-        <div class="controls">
-            <input id="btnToggleView" class="icon" type="checkbox" name="toggleView" onclick="toggleView()">
-            <input id="btnToggleResolution" class="icon" type="checkbox" name="toggleResolution" onchange="toggleResolution()">
-            <input id="btnReset" class="icon" type="checkbox" name="reset" onclick="reset()">
-        </div>
-    </div>
-
-    <script type="x-shader/x-fragment" id="fragmentShader">#version 300 es
-    precision highp float;
-    out vec4 O;
-    uniform float time;
-    uniform vec2 resolution;
-    uniform vec2 touch;
-    uniform int pointerCount;
-    uniform vec2[10] pointers;
-    #define PA pointers
-    #define zoom (P>1 ? distance(PA[0].xy,PA[1].xy)/MN : .0)
-    uniform samplerCube cubeMap;
-    #define cmap cubeMap
-    #define mouse (touch/R)
-    #define P pointerCount
-    #define FC gl_FragCoord.xy
-    #define R resolution
-    #define T time
-    #define N normalize
-    #define S smoothstep
-    #define MN min(R.x,R.y)
-    #define rot(a) mat2(cos((a)-vec4(0,11,33,0)))
-    float tor(vec3 p, vec2 s) {
-        vec2 c=vec2(length(p.xy)-s.x,p.z);
-        return length(c)-s.y;
-    }
-    vec2 map(vec3 p) {
-        vec3 q=p;
-        p.yz*=rot(-mouse.y*6.3-T*.4);
-        p.xz*=rot(3.14+mouse.x*6.3+T*.2);
-        vec2
-        a=vec2(abs(tor(p,vec2(1,.4)))-.01,1),
-        b=vec2(abs(length(q)-10.)-.05,0);
-        a=a.x<b.x?a:b;
-        return a;
-    }
-    vec3 norm(vec3 p) {
-        float h=1e-3; vec2 k=vec2(-1,1);
-        return N(
-            k.xyy*map(p+k.xyy*h).x+
-            k.yxy*map(p+k.yxy*h).x+
-            k.yyx*map(p+k.yyx*h).x+
-            k.xxx*map(p+k.xxx*h).x
-        );
-    }
-    vec3 dir(vec2 uv, vec3 p, vec3 t, float z) {
-        vec3 up=vec3(0,1,0),
-        f=N(t-p),
-        r=N(cross(up,f)),
-        u=N(cross(f,r));
-        return N(mat3(r,u,f)*vec3(uv,z));
-    }
-    void main() {
-        vec2 uv=(FC-.5*R)/MN;
-        float grain=MN;
-        uv=floor(uv*grain)/grain;
-        vec2 st=uv*.8;
-        vec3 col=vec3(0),
-        p=vec3(0,0,-3.+zoom),
-        rd=dir(uv,p,vec3(0),1.-.2*dot(uv,uv));
-        vec3 lp=vec3(-1,2,-3);
-        float dd=.0, at=.0, bnz=.0, side=1.;
-        for (float i=.0; i<400.; i++) {
-            vec2 d=map(p);
-            d.x*side;
-            if (abs(d.x)<1e-3) {
-                vec3 n=norm(p)*side, l=N(lp-p);
-                float dif=clamp(dot(l,n),.0,1.);
-                if (d.y<1.) {
-                    rd=reflect(rd,n);
-                    rd.xz*=rot(T);
-                    col=mix(col,texture(cmap,-rd).rgb,.5);
-                    break;
-                } else if (bnz++<1.) {
-                    vec3 r=reflect(rd,n);
-                    r.xz*=rot(T);
-                    float fre=clamp(1.+dot(rd,n),.0,1.),
-                    spe=pow(clamp(dot(r,l),.0,1.), 64.0);
-                    col+=spe*2.;
-                    col+=2.*fre*texture(cmap,r).rgb;
-                    at*=15.;
-                    col+=at*at;
-                }
-                if (dot(l,n)<.0) l=-l;
-                dif=clamp(dot(l,n),.0,1.);
-                float fre=pow(clamp(1.+dot(rd,n),.0,1.),5.);
-                col+=.08+.2*dif+.1*fre;
-                side=-side;
-                vec3 rdo=refract(rd,n,1.+side*.4);
-                if (dot(rdo,rdo)==.0) rdo=reflect(rd,n);
-                rd=rdo;
-                d.x=11e-1;
-            }
-            p+=rd*d.x;
-            dd+=d.x;
-            at+=.05*(.05/dd);
-        }
-        col=S(.0,1.25,col);
-        col=tanh(col)*vec3(1.7,.9,1.1);
-        col=pow(col,vec3(.4545));
-        uv=2.*FC/R-1.;
-        uv*=.8;
-        uv*=uv;
-        float v=dot(uv,uv);
-        col=mix(col,vec3(0),v);
-        O=vec4(col,1);
-    }</script>
-
-    <script>
-        /* JS 시작 */
-        let editMode = false;
-        let resolution = 1;
-        let renderDelay = 1000;
-        let dpr = Math.max(1, resolution * window.devicePixelRatio);
-        let frm, source, editor, store, renderer, pointers;
-        const shaderId = 'azObdyy';
-
-        function resize() {
-            const { innerWidth: width, innerHeight: height } = window;
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            if (renderer) renderer.updateScale(dpr);
-        }
-
-        function toggleView() {
-            const isChecked = document.getElementById('btnToggleView').checked;
-            document.getElementById('codeEditor').classList.toggle('hidden', isChecked);
-            document.getElementById('error').classList.toggle('hidden', isChecked);
-            canvas.style.setProperty('--canvas-z-index', isChecked ? 0 : -1);
-        }
-
-        function reset() {
-            location.reload();
-        }
-
-        function toggleResolution() {
-            resolution = document.getElementById('btnToggleResolution').checked ? .5 : 1;
-            dpr = Math.max(1, resolution * window.devicePixelRatio);
-            if(pointers) pointers.updateScale(dpr);
-            resize();
-        }
-
-        function loop(now) {
-            renderer.updateMouse(pointers.first);
-            renderer.updatePointerCount(pointers.count);
-            renderer.updatePointerCoords(pointers.coords);
-            renderer.updateMove(pointers.move);
-            renderer.render(now);
-            frm = requestAnimationFrame(loop);
-        }
-
-        const debounce = (fn, delay) => {
-            let timerId;
-            return (...args) => {
-                clearTimeout(timerId);
-                timerId = setTimeout(() => fn.apply(this, args), delay);
-            }
-        }
-        const render = debounce(() => {
-            // 셰이더 실시간 업데이트 로직 (필요 시)
-        }, renderDelay);
-
-        window.onload = () => {
-            source = document.getElementById("fragmentShader");
-            renderer = new Renderer(canvas, dpr);
-            pointers = new PointerHandler(canvas, dpr);
-            editor = new Editor(document.getElementById('codeEditor'), document.getElementById('error'), document.getElementById('indicator'));
-            
-            renderer.setup();
-            renderer.init();
-
-            if (!editMode) {
-                document.getElementById('btnToggleView').checked = true;
-                toggleView();
-            }
-
-            resize();
-            renderer.updateShader(source.textContent);
-            loop(0);
-        };
-
-        window.onresize = resize;
-
-        // --- Classes (Renderer, PointerHandler, Editor) ---
-        class Renderer {
-            #vertexSrc = "#version 300 es\nprecision highp float;\nin vec4 position;\nvoid main(){gl_Position=position;}";
-            #vertices = [-1, 1, -1, -1, 1, 1, 1, -1];
-            constructor(canvas, scale) {
-                this.canvas = canvas;
-                this.scale = scale;
-                this.gl = canvas.getContext("webgl2");
-                this.shaderSource = "";
-            }
-            updateShader(source) {
-                this.shaderSource = source;
-                this.setup();
-                this.init();
-            }
-            updateMove(deltas) { this.mouseMove = deltas; }
-            updateMouse(coords) { this.mouseCoords = coords; }
-            updatePointerCoords(coords) { this.pointerCoords = coords; }
-            updatePointerCount(nbr) { this.nbrOfPointers = nbr; }
-            updateScale(scale) {
-                this.scale = scale;
-                this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-            }
-            compile(shader, source) {
-                const gl = this.gl;
-                gl.shaderSource(shader, source);
-                gl.compileShader(shader);
-                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(shader));
-            }
-            setup() {
-                const gl = this.gl;
-                this.vs = gl.createShader(gl.VERTEX_SHADER);
-                this.fs = gl.createShader(gl.FRAGMENT_SHADER);
-                this.compile(this.vs, this.#vertexSrc);
-                this.compile(this.fs, this.shaderSource);
-                this.program = gl.createProgram();
-                gl.attachShader(this.program, this.vs);
-                gl.attachShader(this.program, this.fs);
-                gl.linkProgram(this.program);
-                this.createCubeMap();
-            }
-            createCubeMap() {
-                const gl = this.gl;
-                const cubeMap = gl.createTexture();
-                gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
-                const imgpath='https://assets.codepen.io/4386748';
-                const faces = [
-                    [gl.TEXTURE_CUBE_MAP_POSITIVE_X, '03posx.jpg'], [gl.TEXTURE_CUBE_MAP_NEGATIVE_X, '03negx.jpg'],
-                    [gl.TEXTURE_CUBE_MAP_POSITIVE_Y, '03posy.jpg'], [gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, '03negy.jpg'],
-                    [gl.TEXTURE_CUBE_MAP_POSITIVE_Z, '03posz.jpg'], [gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, '03negz.jpg']
-                ];
-                for (let [target, url] of faces) {
-                    gl.texImage2D(target, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-                    const image = new Image();
-                    image.crossOrigin = 'anonymous';
-                    image.onload = () => {
-                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
-                        gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-                    };
-                    image.src = `${imgpath}/${url}?width=512&height=512&format=auto`;
-                }
-                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            }
-            init() {
-                const { gl, program } = this;
-                this.buffer = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.#vertices), gl.STATIC_DRAW);
-                const pos = gl.getAttribLocation(program, "position");
-                gl.enableVertexAttribArray(pos);
-                gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-                program.resolution = gl.getUniformLocation(program, "resolution");
-                program.time = gl.getUniformLocation(program, "time");
-                program.touch = gl.getUniformLocation(program, "touch");
-                program.pointerCount = gl.getUniformLocation(program, "pointerCount");
-                program.pointers = gl.getUniformLocation(program, "pointers");
-            }
-            render(now = 0) {
-                const { gl, program, buffer, canvas, mouseCoords, pointerCoords, nbrOfPointers } = this;
-                if (!program) return;
-                gl.useProgram(program);
-                gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-                gl.uniform2f(program.resolution, canvas.width, canvas.height);
-                gl.uniform1f(program.time, now * 1e-3);
-                gl.uniform2f(program.touch, ...mouseCoords);
-                gl.uniform1i(program.pointerCount, nbrOfPointers);
-                gl.uniform2fv(program.pointers, pointerCoords);
-                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-            }
-        }
-
-        class PointerHandler {
-            constructor(element, scale) {
-                this.scale = scale;
-                this.pointers = new Map();
-                this.lastCoords = [0,0];
-                this.moves = [0,0];
-                element.addEventListener("pointerdown", (e) => {
-                    this.pointers.set(e.pointerId, [e.clientX * this.scale, element.height - e.clientY * this.scale]);
-                });
-                element.addEventListener("pointermove", (e) => {
-                    if (this.pointers.has(e.pointerId)) {
-                        this.pointers.set(e.pointerId, [e.clientX * this.scale, element.height - e.clientY * this.scale]);
-                        this.lastCoords = [e.clientX, e.clientY];
-                    }
-                });
-                element.addEventListener("pointerup", (e) => this.pointers.delete(e.pointerId));
-                element.addEventListener("pointerleave", (e) => this.pointers.delete(e.pointerId));
-            }
-            updateScale(s) { this.scale = s; }
-            get count() { return this.pointers.size; }
-            get coords() { return this.pointers.size > 0 ? Array.from(this.pointers.values()).flat() : [0, 0]; }
-            get first() { return this.pointers.values().next().value || this.lastCoords; }
-            get move() { return [0,0]; }
-        }
-
-        class Editor {
-            constructor(textarea, errorfield, errorindicator) {
-                this.textarea = textarea;
-                this.errorfield = errorfield;
-                this.errorindicator = errorindicator;
-            }
-            setError(message) {
-                this.errorfield.innerHTML = message;
-                this.errorfield.classList.add('opaque');
-            }
-        }
-    </script>
-</body>
-</html>
+        /* --- Projects & Experience --- */
+        .item { margin-bottom: 30px; }
+        .item-header { display: flex; justify-content: space-between; align-items: baseline; }
+        .item-title { font-size: 1.2rem; font-weight
